@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+    <title>2FA Verification</title>
+    <style>
+        /* Styl wymuszający wyśrodkowanie elementów wewnątrz kontenera */
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+        img {
+            margin: 20px 0;
+            border: 5px solid white;
+            border-radius: 8px;
+            max-width: 200px; /* Rozmiar optymalny dla kodu QR */
+        }
+        .msg {
+            color: #ff4d4d; /* Czerwień dla błędów zgodnie z dokumentacją */
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2 class="word">Konfiguracja bezpieczeństwa logowania</h2>
+
+        <p style="color: white; font-size: 0.9em;">Scan the QR code in your authenticator app </p>
+
+        <form action="{{ url_for('login_after_reg') }}" method="post">
+            <div class="msg">{{ msg }}</div>
+            
+            <img src="data:image/png;base64,{{decoded_bytes}}">
+            
+            <input class="textbox" 
+                   type="text" 
+                   inputmode="numeric" 
+                   pattern="[0-9]{6}" 
+                   maxlength="6" 
+                   name="totp" 
+                   placeholder="Wprowadź kod z aplikacji" 
+                   required>
+
+            <button class="btn" type="submit">Verify & Login</button>
+        </form>
+    </div>
+
+</body>
+</html>

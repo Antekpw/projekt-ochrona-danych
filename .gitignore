@@ -1,0 +1,3 @@
+docker-compose.yml
+postgres_data/
+app/venv/
