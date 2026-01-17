@@ -38,7 +38,7 @@
 
         <p style="color: white; font-size: 0.9em;">Scan the QR code in your authenticator app </p>
 
-        <form action="{{ url_for('login_after_reg') }}" method="post">
+        <form action="{{ url_for('auth.login_after_reg') }}" method="post">
             <div class="msg">{{ msg }}</div>
             
             <img src="data:image/png;base64,{{decoded_bytes}}">
