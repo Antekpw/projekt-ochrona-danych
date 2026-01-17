@@ -62,7 +62,7 @@ def login_after_reg():
             session['logged_in'] = True
             flash(message, 'success')
             time.sleep(0.5)
-            return redirect('/dashboard')
+            return redirect('/inbox')
         else:
             flash(message, 'error')
             time.sleep(0.5)

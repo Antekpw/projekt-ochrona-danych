@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skrzynka odbiorcza</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        h2 { color: #333; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        
+        .message-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .message-table th, .message-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #eee; }
+        .message-table th { background-color: #f8f9fa; color: #666; text-transform: uppercase; font-size: 0.85rem; }
+        
+        /* Styl dla nieprzeczytanych wiadomości */
+        .unread { background-color: #fdfdfd; font-weight: bold; color: #000; }
+        .unread td { border-left: 4px solid #007bff; }
+        
+        .status-badge { padding: 4px 8px; border-radius: 12px; font-size: 0.75rem; }
+        .badge-new { background: #e7f3ff; color: #007bff; }
+        .badge-read { background: #f0f2f5; color: #666; }
+        
+        .attachment-icon { color: #666; margin-right: 5px; }
+        
+        .btn-view { text-decoration: none; color: #007bff; font-weight: 500; }
+        .btn-view:hover { text-decoration: underline; }
+        
+        .empty-state { text-align: center; padding: 40px; color: #999; }
+        .no-messages-icon { font-size: 3rem; margin-bottom: 10px; display: block; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-actions">
+        <h2>Twoja zaszyfrowana skrzynka</h2>
+        <a href="{{ url_for('messages.send_message') }}" class="btn-compose">
+            + Nowa wiadomość
+        </a>
+    </div>
+
+    <table class="message-table">
+        <thead>
+            <tr>
+                <th>Status</th>
+                <th>Nadawca</th>
+                <th>Data otrzymania</th>
+                <th>Opcje</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for recipient_msg in messages %}
+                {# recipient_msg to obiekt RecipientMessage #}
+                {# recipient_msg.message to powiązany obiekt Message #}
+                <tr class="{{ 'unread' if not recipient_msg.is_read else '' }}">
+                    <td>
+                        {% if not recipient_msg.is_read %}
+                            <span class="status-badge badge-new">Nowa</span>
+                        {% else %}
+                            <span class="status-badge badge-read">Przeczytana</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {{ recipient_msg.message.sender.email }}
+                    </td>
+                    <td>
+                        {{ recipient_msg.message.created_at.strftime('%d.%m.%Y %H:%M') }}
+                    </td>
+                    <td>
+                        <a href="{{ url_for('messages.view_message', msg_id=recipient_msg.message_id) }}" class="btn-view">
+                            Otwórz wiadomość
+                        </a>
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="4" class="empty-state">
+                        <span class="no-messages-icon">📥</span>
+                        Brak wiadomości w skrzynce odbiorczej.
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+</body>
+</html>

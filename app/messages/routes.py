@@ -1,77 +1,98 @@
-from flask import Blueprint, request, render_template, session,redirect,flash
+from flask import Blueprint, request, render_template, session,redirect,flash,send_file, url_for
 from database import db
 from models.models import Message, User, UserKey ,RecipientMessage 
-from Crypto.Cipher import AES
-from Crypto.PublicKey import RSA
-import os
-from Crypto.Random import get_random_bytes
-from Crypto.Util.Padding import pad,unpad
-from Crypto.Cipher import PKCS1_OAEP
-from Crypto.Hash import SHA256
-from Crypto.Signature import pss
+import io
+from .services import *
+import magic
 messages_bp = Blueprint('messages', __name__)
 
 @messages_bp.route("/send", methods=['GET', 'POST'])
 def send_message():
-    current_user_id = session.get('user_id')
     if request.method == 'POST':
-        text = request.form.get('message', '')
-        attachment = request.files.get('attachment', None)
-        receiver_mail = request.form.get('receiver_mail', '')
-        password = request.form.get('password', '')
-        receiver = db.session.query(User).filter_by(email=receiver_mail).first()
+        receiver_mail = request.form.get('receiver_mail')
+        message_text = request.form.get('message', '')
+        passphrase = request.form.get('password')
+        file = request.files.get('attachment')
+        file_bytes = file.read() if file else b''
 
-        receiver_key = db.session.query(UserKey).filter_by(user_id=receiver.id).first()
-        #print("receiver_id:", receiver.id)
-        RSA_public_key = RSA.import_key(receiver_key.public_key_rsa)
-        #print("Receiver Key:", RSA_public_key.export_key(format='DER').hex())
-        key = os.urandom(32)
-        iv = get_random_bytes(16)
-        aes = AES.new(key, AES.MODE_CBC,iv)
+        receiver = User.query.filter_by(email=receiver_mail).first()
+        if not receiver:
+            flash("Wpisz odbiorcę jeszcze raz", "danger")
+            return redirect(request.url)
 
-        data_to_send = create_data_to_send(text, attachment)
+        success, info = encrypt_message(
+            sender_id=session.get('user_id'),
+            receiver=receiver,
+            text=message_text,
+            attachment_bytes=file_bytes,
+            passphrase=passphrase
+        )
 
-        ##data_padded = uzupełnienie do bloku 16 bajtów
-        data_padded = pad(data_to_send,16)
+        if success:
+            flash(info, "success")
+        else:
+            flash(info, "danger")
+            
+        return render_template('send_message.html')
+    print("wyslane")
+    return render_template('send_message.html')
+@messages_bp.route("/inbox")
+def inbox():
+    user_id = session.get('user_id')
+    messages = RecipientMessage.query.join(Message).filter(RecipientMessage.recipient_id == user_id, 
+                                                           RecipientMessage.is_deleted == False).order_by(Message.created_at.desc()).all()
+    return render_template('inbox.html', messages=messages)
 
-        encrypted_data = aes.encrypt(data_padded)
-        content = iv + encrypted_data
-        ## signature = RSA.sign(data_to_send, private_key, 'SHA-256') skrot danych zaszyfrowanych prywatnym kluczem nadawcy
-        ## encrypted_aes_key zaszyfrowany klucz AES kluczem publicznym odbiorcy
-        encrypted_aes_key = encrypt_aes_key(RSA_public_key, key)
+@messages_bp.route("/message/<int:msg_id>",methods=['GET','POST'])
+def view_message(msg_id):
+    user_id = session.get('user_id')
+    passphrase = request.form.get('password', '')
+    if not user_id:
+        flash("Nie jesteś zalogowany.", "danger")
+        return redirect('/login')
 
-        ###signature
-        sender_private_key_obj = db.session.query(UserKey).filter_by(user_id=current_user_id).first()
-        sender_private_key = RSA.import_key(sender_private_key_obj.private_key_encrypted, passphrase=password)
+    recipient_msg = RecipientMessage.query.filter_by(message_id=msg_id, recipient_id=user_id).first()
 
-        signature = sign(data_to_send, sender_private_key)
+    if not recipient_msg or recipient_msg.is_deleted:
+        print("wtf tutaj?")
+        flash("Brak wiadomości.", "danger")
+        return redirect('/inbox')
+    if request.method == 'GET':
+        return render_template('unlock_message.html', msg_id=msg_id)
+    success, content = decrypt_message(
+        recipient_msg=recipient_msg,
+        passphrase=request.form.get('password', '')
+    )
 
-        message_obj = Message(sender_id=current_user_id, encrypted_body=content, signature=signature)
-        db.session.add(message_obj)
-        db.session.flush()
-        recipient_msg_obj = RecipientMessage(message_id=message_obj.id, recipient_id=receiver.id, encrypted_aes_key=encrypted_aes_key)
+    if not success:
+        flash('Wprowadz haslo ponownie', "danger")
+        print("chyba tutaj")
+        return render_template('unlock_message.html', msg_id=msg_id)
+    
+    mark_read(recipient_msg)
+    #print(content)
+    return render_template('view_message.html', message=recipient_msg.message, content=content)
+@messages_bp.route("/download/<int:msg_id>", methods=['POST'])
+def download_attachment(msg_id):
+    user_id = session.get('user_id')
+    passphrase = request.form.get('password') 
 
-        db.session.add(recipient_msg_obj)
-        db.session.commit()
+    recipient_msg = RecipientMessage.query.filter_by(message_id=msg_id, recipient_id=user_id).first_or_404()
 
-        return render_template('send_message.html', msg='Wiadomość wysłana')
-    elif request.method == 'GET':
-        return render_template('send_message.html', msg='Wyślij wiadomość')
+    success, content = decrypt_message(recipient_msg, passphrase)
 
-def encrypt_aes_key(RSA_public_key, key):
-    cipher = PKCS1_OAEP.new(RSA_public_key)
-    encrypted_aes_key = cipher.encrypt(key)
-    return encrypted_aes_key
+    if success:
+        print("moze chociaz tutaj")
+         
+        print(magic.from_buffer(content['attachment'], mime=True))
+        return send_file(
+            io.BytesIO(content['attachment']),
+            mimetype=magic.from_buffer(content['attachment'], mime=True),
+            as_attachment=True,
+            download_name=f"zalacznik_{msg_id}" # Można tu dodać logikę rozszerzeń
+        )
+    
+    flash("Błąd autoryzacji przy pobieraniu pliku.")
+    print("blad przy pobieraniu")
+    return redirect("/inbox")
 
-def sign(data_to_send, sender_private_key):
-    h = SHA256.new(data_to_send)
-    signature = pss.new(sender_private_key).sign(h)
-    return signature
-
-def create_data_to_send(text, attachment):
-    text_len  = len(text)
-    text_to_bytes = text.encode('utf-8')
-    attachment_to_bytes = attachment.read()
-        #print(type(attachment_to_bytes)) bytes
-    data_to_send = text_len.to_bytes(4, 'big') + text_to_bytes + attachment_to_bytes
-    return data_to_send

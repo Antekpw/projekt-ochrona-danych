@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wiadomość od {{ message.sender.email }}</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; padding: 20px; }
+        .message-container { max-width: 800px; margin: auto; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden; }
+        
+        .message-header { background: #f8f9fa; padding: 20px; border-bottom: 1px solid #eee; }
+        .meta-info { color: #666; font-size: 0.9rem; margin: 5px 0; }
+        .sender { font-weight: bold; color: #007bff; font-size: 1.1rem; }
+        
+        .verification-badge { display: inline-block; padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; margin-top: 10px; }
+        .verified { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+
+        .message-body { padding: 30px; line-height: 1.6; color: #333; white-space: pre-wrap; background: #fff; min-height: 200px; }
+        
+        .attachment-section { padding: 20px; background: #fdfdfd; border-top: 1px solid #eee; display: flex; align-items: center; justify-content: space-between; }
+        .attachment-info { display: flex; align-items: center; gap: 10px; }
+        
+        .btn { padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: 500; transition: 0.2s; cursor: pointer; border: none; }
+        .btn-download { background: #28a745; color: white; }
+        .btn-download:hover { background: #218838; }
+        .btn-back { background: #6c757d; color: white; display: inline-block; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+<div style="max-width: 800px; margin: auto;">
+    <a href="/inbox" class="btn btn-back">← Powrót do skrzynki</a>
+
+    <div class="message-container">
+        <div class="message-header">
+            <div class="sender">Od: {{ message.sender.email }}</div>
+            <div class="meta-info">Wysłano: {{ message.created_at.strftime('%d.%m.%Y %H:%M:%S') }}</div>
+            
+            <div class="verification-badge verified">
+                <strong>✓ Podpis zweryfikowany</strong> – Masz pewność, że treść nie została zmieniona.
+            </div>
+        </div>
+
+        <div class="message-body">
+            {{ content.text }}
+        </div>
+
+        {% if content.attachment %}
+        <div class="attachment-section">
+            <div class="attachment-info">
+                <div style="background: #e9ecef; padding: 10px; border-radius: 8px; font-size: 1.5rem;">
+            📎
+                </div>
+                <div>
+                    <strong style="display: block;">Zaszyfrowany załącznik</strong>
+                    <small style="color: #666;">Rozmiar: {{ content.attachment|length // 1024 }} KB</small>
+                </div>
+            </div>
+    
+                <form action="{{ url_for('messages.download_attachment', msg_id=message.id) }}" method="POST">
+                    <input type="password" name="password" placeholder="Hasło klucza..." required 
+               style="padding: 5px; border-radius: 4px; border: 1px solid #ccc;">
+                    <button type="submit" class="btn btn-download">
+                     Pobierz plik
+                    </button>
+                </form>
+        </div>
+{% endif %}
+    </div>
+</div>
+
+</body>
+</html>
