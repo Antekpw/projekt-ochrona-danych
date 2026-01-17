@@ -3,6 +3,7 @@ from flask_session import Session
 from database import db
 import os
 from auth.routes import auth_bp
+from messages.routes import messages_bp
 def create_app():
     app = Flask(__name__)
     app.secret_key = os.urandom(32)  # KLUCZ DO PODPISYWANIA COOKIE
@@ -16,6 +17,7 @@ def create_app():
     db.init_app(app)
     Session(app)
     app.register_blueprint(auth_bp)
+    app.register_blueprint(messages_bp)
     return app
 
 

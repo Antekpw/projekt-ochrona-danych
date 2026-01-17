@@ -38,18 +38,27 @@ class Message(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     sender_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    content = db.Column(db.Text, nullable=False)               
-    signature = db.Column(db.Text, nullable=False)             
+    encrypted_body = db.Column(db.LargeBinary, nullable=False)               
+    signature = db.Column(db.LargeBinary, nullable=False)             
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
     recipients = db.relationship('RecipientMessage', backref='message', cascade="all, delete-orphan")
+
+    def __init__(self, sender_id, encrypted_body, signature):
+        self.sender_id = sender_id
+        self.encrypted_body = encrypted_body
+        self.signature = signature
 
 class RecipientMessage(db.Model):
     __tablename__ = 'recipient_message'
     
     message_id = db.Column(db.Integer, db.ForeignKey('messages.id'), primary_key=True)
     recipient_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
-    
-    encrypted_aes_key = db.Column(db.Text, nullable=False)
+
+    encrypted_aes_key = db.Column(db.LargeBinary, nullable=False)
     is_read = db.Column(db.Boolean, default=False)
     is_deleted = db.Column(db.Boolean, default=False)
+    
+    def __init__(self, message_id, recipient_id, encrypted_aes_key):
+        self.message_id = message_id
+        self.recipient_id = recipient_id
+        self.encrypted_aes_key = encrypted_aes_key

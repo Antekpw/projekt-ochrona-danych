@@ -18,8 +18,8 @@ def validate_password(password):
 
 def generate_keys(password):
     key = RSA.generate(2048)
-    private_key = key.export_key(passphrase=password, format='DER', pkcs=8)
-    public_key = key.public_key().export_key(format='DER')
+    private_key = key.export_key(passphrase=password, format='PEM', pkcs=8)
+    public_key = key.public_key().export_key(format='PEM')
     return private_key, public_key
 
 def generate_totp_qr_code(email, totp_secret):
