@@ -1,6 +1,6 @@
 import time
 from flask import Blueprint, request, render_template, session,redirect,flash
-from .services import * # Upewnij się, że importujesz funkcję
+from .services import * 
 auth_bp = Blueprint('auth', __name__)
 
 @auth_bp.route("/register", methods=['GET', 'POST'])
@@ -39,8 +39,8 @@ def login():
             msg = msg
             time.sleep(0.5)
             return render_template("login.html",msg=msg)
-        
-    session['user_id'] = user_id
+    session['temp_user_id'] = user_id  
+    #session['user_id'] = user_id
 
     time.sleep(0.5)
     
@@ -48,7 +48,7 @@ def login():
 
 @auth_bp.route("/login/2FA",methods = ['POST','GET'])
 def login_after_reg():
-    user_id = session.get('user_id')
+    user_id = session.get('temp_user_id')
     print("user_id:", user_id)
     if not user_id:
         flash('Sesja wygasła. Zaloguj się ponownie.', 'error')
@@ -59,7 +59,8 @@ def login_after_reg():
         success, message = verify_2fa(user_id, code)
         
         if success:
-            session['logged_in'] = True
+            session['user_id'] = session.pop('temp_user_id', None)
+            #session['logged_in'] = True
             flash(message, 'success')
             time.sleep(0.5)
             return redirect('/inbox')
@@ -70,3 +71,14 @@ def login_after_reg():
     
     elif request.method == 'GET':
         return render_template('2FA.html', msg='Wprowadź kod 2FA')
+    
+from functools import wraps
+from flask import session, redirect, url_for
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            return redirect(url_for('auth.login')) 
+        return f(*args, **kwargs)
+    return decorated_function

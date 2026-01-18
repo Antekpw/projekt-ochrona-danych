@@ -4,9 +4,12 @@ from models.models import Message, User, UserKey ,RecipientMessage
 import io
 from .services import *
 import magic
+import time
+from auth.routes import login_required
 messages_bp = Blueprint('messages', __name__)
 
 @messages_bp.route("/send", methods=['GET', 'POST'])
+@login_required
 def send_message():
     if request.method == 'POST':
         receiver_mail = request.form.get('receiver_mail')
@@ -32,11 +35,12 @@ def send_message():
             flash(info, "success")
         else:
             flash(info, "danger")
-            
-        return render_template('send_message.html')
+        time.sleep(1)
+        return redirect('/inbox')
     print("wyslane")
     return render_template('send_message.html')
 @messages_bp.route("/inbox")
+@login_required
 def inbox():
     user_id = session.get('user_id')
     messages = RecipientMessage.query.join(Message).filter(RecipientMessage.recipient_id == user_id, 
@@ -44,6 +48,7 @@ def inbox():
     return render_template('inbox.html', messages=messages)
 
 @messages_bp.route("/message/<int:msg_id>",methods=['GET','POST'])
+@login_required
 def view_message(msg_id):
     user_id = session.get('user_id')
     passphrase = request.form.get('password', '')
@@ -72,7 +77,9 @@ def view_message(msg_id):
     mark_read(recipient_msg)
     #print(content)
     return render_template('view_message.html', message=recipient_msg.message, content=content)
+
 @messages_bp.route("/download/<int:msg_id>", methods=['POST'])
+@login_required
 def download_attachment(msg_id):
     user_id = session.get('user_id')
     passphrase = request.form.get('password') 
