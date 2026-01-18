@@ -4,14 +4,12 @@ from Crypto.Hash import SHA256
 from Crypto.Signature import pss
 from database import db
 def serialize_message(text, attachment_bytes):
-    """Pakuje tekst i załącznik w jeden ciąg bajtów."""
     text_bytes = text.encode('utf-8')
     text_len = len(text_bytes)
     # [4 bajty długości][tekst][reszta to plik]
     return text_len.to_bytes(4, 'big') + text_bytes + attachment_bytes
 
 def deserialize_message(raw_data):
-    """Odwrotność - wyciąga tekst i załącznik."""
     text_len = int.from_bytes(raw_data[:4], 'big')
     text = raw_data[4:4+text_len].decode('utf-8')
     attachment = raw_data[4+text_len:]
