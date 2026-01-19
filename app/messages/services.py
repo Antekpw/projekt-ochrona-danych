@@ -84,3 +84,19 @@ def decrypt_message(recipient_msg, passphrase):
 
     except Exception:
         return False, "Wystąpił błąd podczas odszyfrowywania wiadomości."
+def remove_message_from_inbox(user_id,msg_id):
+    try:
+        recipient_entry = RecipientMessage.query.filter_by(
+            recipient_id=user_id, 
+            message_id=msg_id
+        ).first()
+
+        if recipient_entry:
+            recipient_entry.is_deleted = True ##soft delete
+            db.session.commit()
+            return True
+        return False
+    except Exception as e:
+        db.session.rollback()
+        print(f"Błąd podczas usuwania wiadomości: {e}")
+        return False

@@ -103,3 +103,16 @@ def download_attachment(msg_id):
     print("blad przy pobieraniu")
     return redirect("/inbox")
 
+@messages_bp.route("/delete/<int:msg_id>", methods=['POST'])
+@login_required
+def delete_message(msg_id):
+    user_id = session.get('user_id')
+    
+    success = remove_message_from_inbox(user_id, msg_id)
+    
+    if success:
+        flash('Wiadomość została usunięta.', 'success')
+    else:
+        flash('Nie udało się usunąć wiadomości.', 'error')
+        
+    return redirect(url_for('messages.inbox'))

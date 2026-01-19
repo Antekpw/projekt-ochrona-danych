@@ -71,7 +71,15 @@ def login_after_reg():
     
     elif request.method == 'GET':
         return render_template('2FA.html', msg='Wprowadź kod 2FA')
+@auth_bp.route("/logout")
+def logout():
+    session.clear()
     
+    flash("Zostałeś pomyślnie wylogowany.", "success")
+    
+    time.sleep(0.5)
+    return redirect(url_for('auth.login'))
+
 from functools import wraps
 from flask import session, redirect, url_for
 

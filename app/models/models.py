@@ -62,3 +62,5 @@ class RecipientMessage(db.Model):
         self.message_id = message_id
         self.recipient_id = recipient_id
         self.encrypted_aes_key = encrypted_aes_key
+        self.is_read = False
+        self.is_deleted = False
