@@ -15,9 +15,9 @@ def register():
             msg = result
             return render_template('register.html', msg=msg)
 
-        session['user_id'] = user_id
+        session['temp_user_id'] = user_id
         time.sleep(0.5)
-        return render_template("2FA.html", decoded_bytes=result)
+        return render_template('2FA.html', decoded_bytes=result)
 
     elif request.method == 'GET':
         return render_template('register.html', msg='Zarejestruj się')

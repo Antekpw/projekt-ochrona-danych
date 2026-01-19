@@ -1,0 +1,178 @@
+/* 1. RESET I BAZA */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background-color: #f0f2f5; /* Jasnoszare tło strony */
+    margin: 0;
+    padding: 40px 20px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+}
+
+/* 2. GŁÓWNY KONTENER (KARTA) */
+/* Usunąłem stąd na sztywno max-width, żeby karta mogła być elastyczna */
+.container, .card, .message-container {
+    background: white;
+    width: 100%;
+    margin: 0 auto;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    display: block; /* Przywracamy standardowy blokowy układ */
+}
+
+/* 3. DOPASOWANIE SZEROKOŚCI */
+/* Logowanie, Rejestracja i 2FA powinny być wąskie */
+.auth-container { 
+    max-width: 450px; 
+    text-align: center;
+}
+
+/* Skrzynka i wiadomości powinny być szerokie */
+.wide-container { 
+    max-width: 1000px; 
+}
+
+/* 4. FORMULARZE I INPUTY */
+.form-group {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #333;
+}
+
+.textbox, input[type="email"], input[type="password"], input[type="text"], textarea {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.2s;
+}
+
+.textbox:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+    outline: none;
+}
+
+/* 5. PRZYCISKI */
+.btn, button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn:hover, button:hover {
+    background-color: #0056b3;
+}
+
+.btn-compose { margin-bottom: 20px; }
+
+/* 6. TABELA INBOX */
+.message-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.message-table th {
+    text-align: left;
+    padding: 15px;
+    background: #f8f9fa;
+    color: #666;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+}
+
+.message-table td {
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+/* 7. KOMUNIKATY (FLASH/MSG) */
+.alert, .msg {
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 0.95rem;
+    border: 1px solid transparent;
+}
+
+.msg-error, .alert-error {
+    background-color: #fff1f0;
+    color: #cf1322;
+    border-color: #ffa39e;
+}
+
+.msg-success, .alert-success {
+    background-color: #f6ffed;
+    color: #389e0d;
+    border-color: #b7eb8f;
+}
+
+/* 8. QR CODE */
+img {
+    max-width: 200px;
+    margin: 20px auto;
+    display: block;
+    border: 1px solid #eee;
+    padding: 10px;
+    border-radius: 10px;
+}
+
+/* 9. HEADER ACTIONS (INBOX) */
+.header-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    border-bottom: 2px solid #f0f2f5;
+    padding-bottom: 15px;
+}/* Styl dla nieprzeczytanych wiadomości w tabeli */
+tr.unread {
+    background-color: #f8f9ff !important; /* Bardzo delikatny błękitny odcień */
+    font-weight: bold; /* Pogrubienie tekstu dla nowych wiadomości */
+    color: #000;
+}
+
+/* Niebieski pasek z boku dla nieprzeczytanych */
+tr.unread td:first-child {
+    border-left: 4px solid #007bff;
+}
+
+/* Styl dla plakietek statusu */
+.status-badge {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.badge-new {
+    background: #e7f3ff;
+    color: #007bff;
+}
+
+.badge-read {
+    background: #f0f2f5;
+    color: #666;
+}

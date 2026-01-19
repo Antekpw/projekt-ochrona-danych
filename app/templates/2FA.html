@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
     <title>2FA Verification</title>
-    <style>
+    <!--<style>
         /* Styl wymuszający wyśrodkowanie elementów wewnątrz kontenera */
-        .container {
+        /*.container {
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -24,25 +24,30 @@
             border: 5px solid white;
             border-radius: 8px;
             max-width: 200px; /* Rozmiar optymalny dla kodu QR */
-        }
-        .msg {
-            color: #ff4d4d; /* Czerwień dla błędów zgodnie z dokumentacją */
+        
+      /* .msg {
+            color: #ff4d4d; 
             margin-bottom: 10px;
-        }
-    </style>
+      } */
+    </style> -->
 </head>
 <body>
 
-    <div class="container">
+    <div class="container wide-container">
+        {% if decoded_bytes %}
         <h2 class="word">Konfiguracja bezpieczeństwa logowania</h2>
-
-        <p style="color: white; font-size: 0.9em;">Scan the QR code in your authenticator app </p>
+        <p style="color: white; font-size: 0.9em;">Zeskanuj kod QR w swojej aplikacji uwierzytelniającej</p>
+        <img src="data:image/png;base64,{{decoded_bytes}}">
+    {% else %}
+        <h2 class="word">Weryfikacja dwuetapowa</h2>
+        <p style="color: white; font-size: 0.9em;">Wprowadź kod z aplikacji, aby potwierdzić tożsamość</p>
+        {% endif %}
 
         <form action="{{ url_for('auth.login_after_reg') }}" method="post">
-            <div class="msg">{{ msg }}</div>
-            
+           <!-- <div class="msg">{{ msg }}</div> -->
+           <!-- {% if decoded_bytes %}
             <img src="data:image/png;base64,{{decoded_bytes}}">
-            
+           {% endif %} --> 
             <input class="textbox" 
                    type="text" 
                    inputmode="numeric" 

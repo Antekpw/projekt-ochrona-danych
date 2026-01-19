@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+
     <title>Wiadomość od {{ message.sender.email }}</title>
-    <style>
+    <!--<style>
         body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; padding: 20px; }
         .message-container { max-width: 800px; margin: auto; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden; }
         
@@ -24,14 +26,14 @@
         .btn-download { background: #28a745; color: white; }
         .btn-download:hover { background: #218838; }
         .btn-back { background: #6c757d; color: white; display: inline-block; margin-bottom: 20px; }
-    </style>
+    </style> -->
 </head>
 <body>
 
 <div style="max-width: 800px; margin: auto;">
     <a href="/inbox" class="btn btn-back">← Powrót do skrzynki</a>
 
-    <div class="message-container">
+    <div class="container wide-container">
         <div class="message-header">
             <div class="sender">Od: {{ message.sender.email }}</div>
             <div class="meta-info">Wysłano: {{ message.created_at.strftime('%d.%m.%Y %H:%M:%S') }}</div>
