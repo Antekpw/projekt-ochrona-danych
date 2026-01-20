@@ -1,4 +1,5 @@
 from flask import Blueprint, request, render_template, session,redirect,flash,send_file, url_for
+from auth.utils import is_valid_email
 from database import db
 from models.models import Message, User, UserKey ,RecipientMessage 
 import io
@@ -6,6 +7,7 @@ from .services import *
 import magic
 import time
 from auth.routes import login_required
+import bleach
 messages_bp = Blueprint('messages', __name__)
 
 @messages_bp.route("/send", methods=['GET', 'POST'])
@@ -16,7 +18,28 @@ def send_message():
         message_text = request.form.get('message', '')
         passphrase = request.form.get('password')
         file = request.files.get('attachment')
-        file_bytes = file.read() if file else b''
+        #file_bytes = file.read() if file else b''
+
+        clean_message = bleach.clean(
+            message_text,
+            tags=[], 
+            strip=True 
+        )
+        
+        if len(clean_message) > 5000:
+            flash("Wiadomość jest zbyt długa (max 5000 znaków).", "danger")
+            return redirect(request.url)
+        
+        if not is_valid_email(receiver_mail):
+            flash("Niepoprawny format adresu email.", "danger")
+            return redirect(request.url)
+        
+        file_bytes = file.read()
+        print(len(file_bytes))
+        if len(file_bytes) > 5 * 1024 * 1024: ## 5mb tylko
+            flash("Załącznik jest zbyt duży (max 5MB).", "danger")
+            return redirect(request.url)
+
 
         receiver = User.query.filter_by(email=receiver_mail).first()
         if not receiver:
@@ -37,7 +60,6 @@ def send_message():
             flash(info, "danger")
         time.sleep(1)
         return redirect('/inbox')
-    print("wyslane")
     return render_template('send_message.html')
 @messages_bp.route("/inbox")
 @login_required
@@ -59,7 +81,6 @@ def view_message(msg_id):
     recipient_msg = RecipientMessage.query.filter_by(message_id=msg_id, recipient_id=user_id).first()
 
     if not recipient_msg or recipient_msg.is_deleted:
-        print("wtf tutaj?")
         flash("Brak wiadomości.", "danger")
         return redirect('/inbox')
     if request.method == 'GET':
@@ -71,11 +92,9 @@ def view_message(msg_id):
 
     if not success:
         flash('Wprowadz haslo ponownie', "danger")
-        print("chyba tutaj")
         return render_template('unlock_message.html', msg_id=msg_id)
     
     mark_read(recipient_msg)
-    #print(content)
     return render_template('view_message.html', message=recipient_msg.message, content=content)
 
 @messages_bp.route("/download/<int:msg_id>", methods=['POST'])
@@ -89,9 +108,7 @@ def download_attachment(msg_id):
     success, content = decrypt_message(recipient_msg, passphrase)
 
     if success:
-        print("moze chociaz tutaj")
          
-        print(magic.from_buffer(content['attachment'], mime=True))
         return send_file(
             io.BytesIO(content['attachment']),
             mimetype=magic.from_buffer(content['attachment'], mime=True),
@@ -100,7 +117,6 @@ def download_attachment(msg_id):
         )
     
     flash("Błąd autoryzacji przy pobieraniu pliku.")
-    print("blad przy pobieraniu")
     return redirect("/inbox")
 
 @messages_bp.route("/delete/<int:msg_id>", methods=['POST'])

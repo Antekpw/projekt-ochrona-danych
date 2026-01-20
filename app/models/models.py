@@ -9,16 +9,18 @@ class User(db.Model):
     password_hash = db.Column(db.String(255), nullable=False)  
     failed_attempts = db.Column(db.Integer, default=0)    
     created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S")) 
-    totp_secret = db.Column(db.String(32))
-
+    totp_secret = db.Column(db.String(255))
+    totp_salt = db.Column(db.String(64), nullable=True)
+    lockout_until = db.Column(db.DateTime, nullable=True)
     keys = db.relationship('UserKey', backref='owner', cascade="all, delete-orphan", uselist=False)
     sent_messages = db.relationship('Message', backref='sender', lazy=True)
 
-    def __init__(self,email,encrypted_password,totp_secret):
+    def __init__(self,email,encrypted_password,totp_secret,totp_salt):
         self.email = email
         self.password_hash = encrypted_password
         self.totp_secret = totp_secret
-
+        self.totp_salt = totp_salt
+        
 class UserKey(db.Model):
     __tablename__ = 'user_keys'
     
@@ -41,6 +43,7 @@ class Message(db.Model):
     encrypted_body = db.Column(db.LargeBinary, nullable=False)               
     signature = db.Column(db.LargeBinary, nullable=False)             
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
     recipients = db.relationship('RecipientMessage', backref='message', cascade="all, delete-orphan")
 
     def __init__(self, sender_id, encrypted_body, signature):

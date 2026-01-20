@@ -10,7 +10,9 @@ COPY requirements.txt requirements.txt
 
 RUN pip install -r requirements.txt
 
-EXPOSE 5000
 COPY . .
+RUN useradd -m appuser && chown -R appuser /app
+USER appuser
+EXPOSE 5000
 
 CMD ["flask","run","--debug"]

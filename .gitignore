@@ -7,3 +7,4 @@ app/__pycache__/
 __pycache__
 app/flask_session/2029240f6d1128be89ddc32729463129
 nginx/certs/*
+.env

@@ -76,6 +76,7 @@ def decrypt_message(recipient_msg, passphrase):
             return False, "Nieprawidłowy podpis wiadomości."
         
         text, attachment_bytes = deserialize_message(decrypted_data)
+        print(f"DEBUG: Długość tekstu: {len(text)}, Długość załącznika: {len(attachment_bytes)}",flush=True)
         print(type(attachment_bytes))
         return True, {
     'text': text,

@@ -5,49 +5,40 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
     <title>2FA Verification</title>
-    <!--<style>
-        /* Styl wymuszający wyśrodkowanie elementów wewnątrz kontenera */
-        /*.container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-        }
-        form {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-        }
-        img {
-            margin: 20px 0;
-            border: 5px solid white;
-            border-radius: 8px;
-            max-width: 200px; /* Rozmiar optymalny dla kodu QR */
-        
-      /* .msg {
-            color: #ff4d4d; 
-            margin-bottom: 10px;
-      } */
-    </style> -->
+    
 </head>
 <body>
 
     <div class="container wide-container">
         {% if decoded_bytes %}
         <h2 class="word">Konfiguracja bezpieczeństwa logowania</h2>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ 'error' if category == 'danger' else category }}" style="margin-top: 10px;">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
         <p style="color: white; font-size: 0.9em;">Zeskanuj kod QR w swojej aplikacji uwierzytelniającej</p>
         <img src="data:image/png;base64,{{decoded_bytes}}">
     {% else %}
         <h2 class="word">Weryfikacja dwuetapowa</h2>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ 'error' if category == 'danger' else category }}" style="margin-top: 10px;">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
         <p style="color: white; font-size: 0.9em;">Wprowadź kod z aplikacji, aby potwierdzić tożsamość</p>
         {% endif %}
 
         <form action="{{ url_for('auth.login_after_reg') }}" method="post">
-           <!-- <div class="msg">{{ msg }}</div> -->
-           <!-- {% if decoded_bytes %}
-            <img src="data:image/png;base64,{{decoded_bytes}}">
-           {% endif %} --> 
+          
             <input class="textbox" 
                    type="text" 
                    inputmode="numeric" 

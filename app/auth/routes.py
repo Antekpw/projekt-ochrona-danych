@@ -1,6 +1,9 @@
 import time
 from flask import Blueprint, request, render_template, session,redirect,flash
 from .services import * 
+from functools import wraps
+from flask import session, redirect, url_for
+
 auth_bp = Blueprint('auth', __name__)
 
 @auth_bp.route("/register", methods=['GET', 'POST'])
@@ -16,6 +19,7 @@ def register():
             return render_template('register.html', msg=msg)
 
         session['temp_user_id'] = user_id
+        session['temp_password'] = password
         time.sleep(0.5)
         return render_template('2FA.html', decoded_bytes=result)
 
@@ -39,7 +43,8 @@ def login():
             msg = msg
             time.sleep(0.5)
             return render_template("login.html",msg=msg)
-    session['temp_user_id'] = user_id  
+    session['temp_user_id'] = user_id 
+    session['temp_password'] = password
     #session['user_id'] = user_id
 
     time.sleep(0.5)
@@ -49,6 +54,7 @@ def login():
 @auth_bp.route("/login/2FA",methods = ['POST','GET'])
 def login_after_reg():
     user_id = session.get('temp_user_id')
+    temp_password = session.get('temp_password')
     print("user_id:", user_id)
     if not user_id:
         flash('Sesja wygasła. Zaloguj się ponownie.', 'error')
@@ -56,11 +62,11 @@ def login_after_reg():
     
     if request.method == 'POST':
         code = request.form.get('totp', '').strip()
-        success, message = verify_2fa(user_id, code)
+        success, message = verify_2fa(user_id, code,temp_password)
         
         if success:
+            session.pop('temp_password', None)
             session['user_id'] = session.pop('temp_user_id', None)
-            #session['logged_in'] = True
             flash(message, 'success')
             time.sleep(0.5)
             return redirect('/inbox')
@@ -80,8 +86,6 @@ def logout():
     time.sleep(0.5)
     return redirect(url_for('auth.login'))
 
-from functools import wraps
-from flask import session, redirect, url_for
 
 def login_required(f):
     @wraps(f)

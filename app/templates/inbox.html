@@ -12,7 +12,13 @@
 
 <div class="container wide-container">
             <h2>Twoja zaszyfrowana skrzynka</h2>
-
+            {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category }}">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
     <div class="header-actions">
         <a href="{{ url_for('messages.send_message') }}" class="btn-compose">
             + Nowa wiadomość

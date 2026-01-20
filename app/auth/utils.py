@@ -7,6 +7,12 @@ from Crypto.PublicKey import RSA
 import string
 from database import db
 from models.models import User, UserKey
+import re
+import os
+from cryptography.fernet import Fernet
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+
 def validate_password(password):
     num_of_char = len(password)
     has_upper = any(c.isupper() for c in password)
@@ -42,3 +48,35 @@ def encrypt_password(password):
     ph = PasswordHasher()
     encrypted_password = ph.hash(password)
     return encrypted_password
+def is_valid_email(email):
+    regex = r'^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$'
+    return re.match(regex, email.lower()) is not None
+def valid_credentials(email, password):
+    return is_valid_email(email) and validate_password(password)
+
+
+
+
+
+def derive_key_from_password(password, salt):
+    kdf = PBKDF2HMAC(
+        algorithm=hashes.SHA256(),
+        length=32,
+        salt=salt,
+        iterations=100000,
+    )
+    key = base64.urlsafe_b64encode(kdf.derive(password.encode()))
+    return key
+
+def encrypt_secret_with_password(secret, password):
+    salt = os.urandom(16)
+    key = derive_key_from_password(password, salt)
+    cipher = Fernet(key)
+    encrypted_data = cipher.encrypt(secret.encode())
+    return encrypted_data.decode(), base64.b64encode(salt).decode() # sekret i sol
+
+def decrypt_secret_with_password(encrypted_secret, salt_str,password):
+    salt = base64.b64decode(salt_str) # Dekodujemy sól z bazy
+    key = derive_key_from_password(password, salt)
+    cipher = Fernet(key)
+    return cipher.decrypt(encrypted_secret.encode()).decode()

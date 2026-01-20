@@ -13,7 +13,16 @@
 
         <form action="{{ url_for('auth.register') }}" method="post">
             <div>{{ msg }}</div>
-            <input class="textbox" type="email" name="email" placeholder="Enter Email" required>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ 'error' if category == 'danger' else category }}">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+            <input class="textbox" type="email" name="email" placeholder="Enter Email" required pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$">
             <input class="textbox" type="password" name="password" placeholder="Enter Password" required autocomplete="new-password">
 
             <button class="btn" type="submit">Register</button>

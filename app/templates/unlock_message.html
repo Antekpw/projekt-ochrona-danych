@@ -2,6 +2,13 @@
 
 <div class="card">
     <h3>Wiadomość zaszyfrowana</h3>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category }}">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
     <p>Podaj hasło do swojego klucza prywatnego RSA, aby odczytać tę wiadomość.</p>
     
     <form method="POST">
